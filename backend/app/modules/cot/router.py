@@ -63,49 +63,61 @@ async def warmup_cot_caches() -> None:
     Called from main.py lifespan to ensure caches are warm before
     serving traffic.
     """
-    from app.modules.cot.dependencies import get_cot_service
+    from app.core.database import get_connection
+    from app.modules.cot.storage import CotStorage
+    from app.modules.cot.calculator import CotCalculator
+    from app.modules.prices.service import PriceService
 
     logger.info("Starting COT cache warmup...")
-    service = get_cot_service()
 
-    # Popular assets to pre-cache (most frequently accessed)
-    popular_assets = [
-        # Crypto
-        "133741", "133LM4", "146LM1", "133LM5",
-        # Currencies
-        "099741", "096742", "092741", "090741", "089741",
-        # Indices
-        "13874U", "209747", "124608",
-        # Metals
-        "088691", "084691", "076651",
-        # Energy
-        "067651", "023651", "022651",
-    ]
+    # Create service instance directly (not via Depends)
+    conn = get_connection()
+    try:
+        store = CotStorage(conn=conn)
+        calc = CotCalculator()
+        price_service = PriceService()
+        service = CotService(store, calc, price_service)
 
-    # Warm screener-v2 cache first (most important)
-    for subtype in ["fo", "co"]:
-        try:
-            cache_key = f"screener-v2:{subtype}"
-            rows = await asyncio.to_thread(service.get_screener_v2, subtype)
-            if rows:
-                _screener_cache.set(cache_key, rows)
-                logger.info("Warmed screener-v2:%s (%d rows)", subtype, len(rows))
-        except Exception as e:
-            logger.warning("Warmup failed for screener-v2:%s: %s", subtype, e)
+        # Popular assets to pre-cache (most frequently accessed)
+        popular_assets = [
+            # Crypto
+            "133741", "133LM4", "146LM1", "133LM5",
+            # Currencies
+            "099741", "096742", "092741", "090741", "089741",
+            # Indices
+            "13874U", "209747", "124608",
+            # Metals
+            "088691", "084691", "076651",
+            # Energy
+            "067651", "023651", "022651",
+        ]
 
-    # Warm dashboard cache for popular assets
-    warmed = 0
-    for code in popular_assets:
-        try:
-            cache_key = f"dashboard:{code}:auto:fo"
-            data = await asyncio.to_thread(service.get_dashboard, code, None, "fo")
-            if data:
-                _dashboard_cache.set(cache_key, data)
-                warmed += 1
-        except Exception as e:
-            logger.warning("Warmup failed for dashboard %s: %s", code, e)
+        # Warm screener-v2 cache first (most important)
+        for subtype in ["fo", "co"]:
+            try:
+                cache_key = f"screener-v2:{subtype}"
+                rows = await asyncio.to_thread(service.get_screener_v2, subtype)
+                if rows:
+                    _screener_cache.set(cache_key, rows)
+                    logger.info("Warmed screener-v2:%s (%d rows)", subtype, len(rows))
+            except Exception as e:
+                logger.warning("Warmup failed for screener-v2:%s: %s", subtype, e)
 
-    logger.info("COT cache warmup complete: %d/%d dashboards", warmed, len(popular_assets))
+        # Warm dashboard cache for popular assets
+        warmed = 0
+        for code in popular_assets:
+            try:
+                cache_key = f"dashboard:{code}:auto:fo"
+                data = await asyncio.to_thread(service.get_dashboard, code, None, "fo")
+                if data:
+                    _dashboard_cache.set(cache_key, data)
+                    warmed += 1
+            except Exception as e:
+                logger.warning("Warmup failed for dashboard %s: %s", code, e)
+
+        logger.info("COT cache warmup complete: %d/%d dashboards", warmed, len(popular_assets))
+    finally:
+        conn.close()
 
 
 # Register so scheduler can trigger cache invalidation without importing router
