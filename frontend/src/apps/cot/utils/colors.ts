@@ -6,10 +6,10 @@ import type { CrowdedLevel } from '../types';
 
 type RGB = [number, number, number];
 
-export const GREEN: RGB = [46, 160, 100];
-export const RED: RGB = [190, 75, 85];
+export const GREEN: RGB = [0, 176, 80];
+export const RED: RGB = [220, 53, 69];
 
-const MAX_OPACITY = 0.65;
+const MAX_OPACITY = 0.85;
 const MIN_OPACITY = 0.05;
 
 /**
@@ -60,7 +60,7 @@ export function getColorCrowded(crowdedObj: CrowdedLevel | null | undefined): st
  */
 export function changeBg(v: number | null | undefined): string {
     if (v == null || v === 0) return '';
-    const c = v > 0 ? [46, 160, 100] : [190, 75, 85];
+    const c = v > 0 ? [0, 176, 80] : [220, 53, 69];
     return `rgba(${c[0]},${c[1]},${c[2]},0.08)`;
 }
 
