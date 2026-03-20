@@ -18,6 +18,9 @@ interface PricePanelProps {
 
 export default function PricePanel({ priceSeries, weeks, syncId }: PricePanelProps) {
     const chartData = useMemo(() => {
+        if (!weeks || !Array.isArray(weeks)) return [];
+        if (!priceSeries || !Array.isArray(priceSeries)) return [];
+
         const priceMap = new Map(priceSeries.map((p) => [p.date, p.close]));
         return weeks.map((w) => ({
             date: w.date,

@@ -29,6 +29,9 @@ export default function DivergenceChart({ data }: DivergenceChartProps) {
     const commLabel = commGroupKey ? getGroupLabel(market.primary_report, commGroupKey) : null;
 
     const chartData = useMemo(() => {
+        if (!weeks || !Array.isArray(weeks)) return [];
+        if (!priceSeries || !Array.isArray(priceSeries)) return [];
+
         const priceMap = new Map(priceSeries.map((p) => [p.date, p.close]));
         const specNetKey = `${specGroupKey}_net`;
         const commNetKey = commGroupKey ? `${commGroupKey}_net` : null;

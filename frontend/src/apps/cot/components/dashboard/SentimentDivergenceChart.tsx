@@ -25,15 +25,17 @@ export default function SentimentDivergenceChart({ data }: SentimentDivergenceCh
     const { sentimentDivergence } = data;
 
     const chartData = useMemo(
-        () =>
-            sentimentDivergence.map((p) => ({
+        () => {
+            if (!sentimentDivergence || !Array.isArray(sentimentDivergence)) return [];
+            return sentimentDivergence.map((p) => ({
                 date: p.date,
                 spec: +p.specPercentile.toFixed(1),
                 comm: +p.commPercentile.toFixed(1),
                 divergent: p.divergent,
                 // Area fill only when divergent
                 divFill: p.divergent ? Math.abs(p.specPercentile - p.commPercentile) : 0,
-            })),
+            }));
+        },
         [sentimentDivergence],
     );
 

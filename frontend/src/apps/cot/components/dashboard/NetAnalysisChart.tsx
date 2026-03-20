@@ -37,6 +37,9 @@ export default function NetAnalysisChart({ data, side }: NetAnalysisChartProps) 
     const seriesKey = `${specGroupKey}_${side}`;
 
     const chartData = useMemo(() => {
+        if (!weeks || !Array.isArray(weeks)) return [];
+        if (!priceSeries || !Array.isArray(priceSeries)) return [];
+
         const rawSeries = extractSeries(weeks, seriesKey);
         const zSeries = calcZScoreSeries(rawSeries, lookbackWeeks);
         const pctSeries = calcPercentileSeries(rawSeries, lookbackWeeks);

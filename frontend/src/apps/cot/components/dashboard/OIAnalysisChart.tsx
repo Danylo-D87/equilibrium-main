@@ -39,6 +39,10 @@ export default function OIAnalysisChart({ data }: OIAnalysisChartProps) {
     const { weeks, priceSeries, oiSignals } = data;
 
     const chartData = useMemo(() => {
+        if (!weeks || !Array.isArray(weeks)) return [];
+        if (!priceSeries || !Array.isArray(priceSeries)) return [];
+        if (!oiSignals || !Array.isArray(oiSignals)) return [];
+
         const priceMap = new Map(priceSeries.map((p) => [p.date, p.close]));
         const signalMap = new Map(oiSignals.map((s) => [s.date, s.signal]));
 

@@ -40,12 +40,19 @@ export default function FlipChart({ data }: FlipChartProps) {
 
     // Max magnitude for bubble sizing
     const maxMag = useMemo(
-        () => Math.max(1, ...flips.map((f) => f.magnitude)),
+        () => {
+            if (!flips || !Array.isArray(flips) || flips.length === 0) return 1;
+            return Math.max(1, ...flips.map((f) => f.magnitude));
+        },
         [flips],
     );
 
     // Merge flip metadata into price series — guarantees bubbles sit exactly on the line
     const priceData = useMemo((): PricePoint[] => {
+        if (!weeks || !Array.isArray(weeks)) return [];
+        if (!priceSeries || !Array.isArray(priceSeries)) return [];
+        if (!flips || !Array.isArray(flips)) return [];
+
         const priceMap = new Map(priceSeries.map((p) => [p.date, p.close]));
         const flipMap = new Map(flips.map((f) => [f.date, f]));
         return weeks.map((w) => {
