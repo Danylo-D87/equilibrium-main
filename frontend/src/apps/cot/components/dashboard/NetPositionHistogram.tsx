@@ -33,6 +33,7 @@ export default function NetPositionHistogram({ data }: NetPositionHistogramProps
     const { weeks, priceSeries, specGroupKey } = data;
 
     const netData = useMemo((): NetDataPoint[] => {
+        if (!weeks || !Array.isArray(weeks)) return [];
         return weeks.map((w) => {
             const long = (w[`${specGroupKey}_long`] as number) ?? 0;
             const short = (w[`${specGroupKey}_short`] as number) ?? 0;

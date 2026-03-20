@@ -31,6 +31,7 @@ export default function OITrendChart({ data }: OITrendChartProps) {
     const { weeks, priceSeries } = data;
 
     const oiData = useMemo((): OIDataPoint[] => {
+        if (!weeks || !Array.isArray(weeks)) return [];
         const points = weeks.map((w, i) => {
             const oi = (w.open_interest as number) ?? 0;
             const prevOI = i > 0 ? ((weeks[i - 1].open_interest as number) ?? 0) : oi;

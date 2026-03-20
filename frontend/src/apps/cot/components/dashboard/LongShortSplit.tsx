@@ -31,6 +31,7 @@ export default function LongShortSplit({ data }: LongShortSplitProps) {
     const { weeks, priceSeries, specGroupKey } = data;
 
     const splitData = useMemo((): SplitDataPoint[] => {
+        if (!weeks || !Array.isArray(weeks)) return [];
         return weeks.map((w) => ({
             date: w.date,
             long: (w[`${specGroupKey}_long`] as number) ?? 0,
