@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { formatNumber, formatPct, formatDate } from '../utils/formatters';
-import { GREEN, RED, getColorBySign, getColorMono, getColorCentered, getColorCrowded } from '../utils/colors';
+import { getColorBySign, getColorCentered, getColorCrowded } from '../utils/colors';
 import type { MarketData, Group, Week, CrowdedLevel } from '../types';
 
 const ROW_HEIGHT = 22;
@@ -313,9 +313,7 @@ function getCellBg(value: number | string | CrowdedLevel | null | undefined, typ
     const numVal = typeof value === 'number' ? value : null;
     switch (type) {
         case 'change_long':
-            return getColorMono(numVal, maxAbs, GREEN);
         case 'change_short':
-            return getColorMono(numVal, maxAbs, RED);
         case 'change':
         case 'net':
         case 'pct':
