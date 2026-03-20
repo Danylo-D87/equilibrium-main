@@ -13,14 +13,13 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import NetAnalysisChart from '../components/dashboard/NetAnalysisChart';
 import DivergenceChart from '../components/dashboard/DivergenceChart';
 import OIAnalysisChart from '../components/dashboard/OIAnalysisChart';
-import DistributionHistogram from '../components/dashboard/DistributionHistogram';
 import FlipChart from '../components/dashboard/FlipChart';
-import MarketPowerChart from '../components/dashboard/MarketPowerChart';
-import VelocityChart from '../components/dashboard/VelocityChart';
 import SentimentDivergenceChart from '../components/dashboard/SentimentDivergenceChart';
 import RangeSelector from '../components/dashboard/RangeSelector';
 import ConcentrationGauge from '../components/dashboard/ConcentrationGauge';
-import TripleLookbackHeatmap from '../components/dashboard/TripleLookbackHeatmap';
+import NetPositionHistogram from '../components/dashboard/NetPositionHistogram';
+import OITrendChart from '../components/dashboard/OITrendChart';
+import LongShortSplit from '../components/dashboard/LongShortSplit';
 
 // ─── Percentile badge ────────────────────────────────────────
 
@@ -212,54 +211,46 @@ export default function DashboardPage() {
                             <FlipChart data={data} />
                         </DashboardBlock>
 
-                        {/* Row 3: Signals & Power (450px) */}
-                        <DashboardBlock
-                            title="Market Power"
-                            subtitle="Spec % of OI"
-                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
-                        >
-                            <MarketPowerChart data={data} />
-                        </DashboardBlock>
-
-                        <DashboardBlock
-                            title="Position Velocity"
-                            subtitle="Momentum acceleration"
-                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
-                        >
-                            <VelocityChart data={data} />
-                        </DashboardBlock>
-
+                        {/* Row 3: Additional Metrics (450px) */}
                         <DashboardBlock
                             title="Sentiment Divergence"
                             subtitle="Spec vs Comm percentile"
-                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
+                            className="lg:col-span-6 h-[350px] lg:h-[450px]"
                         >
                             <SentimentDivergenceChart data={data} />
                         </DashboardBlock>
 
                         <DashboardBlock
-                            title="Distribution"
-                            subtitle="Net position histogram"
-                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
-                        >
-                            <DistributionHistogram data={data} />
-                        </DashboardBlock>
-
-                        {/* Row 4: Auxiliary (350px) */}
-                        <DashboardBlock
                             title="Concentration Ratio"
                             subtitle="Top-4 / Top-8 trader share"
-                            className="lg:col-span-6 h-[300px] lg:h-[350px]"
+                            className="lg:col-span-6 h-[350px] lg:h-[450px]"
                         >
                             <ConcentrationGauge data={data} />
                         </DashboardBlock>
 
+                        {/* Row 4: Position Breakdown (400px) */}
                         <DashboardBlock
-                            title="Triple Lookback"
-                            subtitle="1Y / 3Y / 5Y alignment"
-                            className="lg:col-span-6 h-[300px] lg:h-[350px]"
+                            title="Net Position Flow"
+                            subtitle="Long - Short bidirectional histogram"
+                            className="lg:col-span-4 h-[350px] lg:h-[400px]"
                         >
-                            <TripleLookbackHeatmap data={data} />
+                            <NetPositionHistogram data={data} />
+                        </DashboardBlock>
+
+                        <DashboardBlock
+                            title="Open Interest Trend"
+                            subtitle="OI dynamics over time"
+                            className="lg:col-span-4 h-[350px] lg:h-[400px]"
+                        >
+                            <OITrendChart data={data} />
+                        </DashboardBlock>
+
+                        <DashboardBlock
+                            title="Long/Short Breakdown"
+                            subtitle="Position magnitude comparison"
+                            className="lg:col-span-4 h-[350px] lg:h-[400px]"
+                        >
+                            <LongShortSplit data={data} />
                         </DashboardBlock>
 
                     </div>
