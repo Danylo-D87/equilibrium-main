@@ -22,7 +22,7 @@ from app.core.logging import setup_logging
 from app.core import scheduler as core_scheduler
 
 # --- Module routers ---
-from app.modules.cot.router import router as cot_router
+from app.modules.cot.router import router as cot_router, warmup_cot_caches
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
 from app.modules.journal.router import router as journal_router
@@ -59,6 +59,9 @@ async def lifespan(app: FastAPI):
     # analytics don't run 5+ in parallel and thrash the 1 GB RAM.
     loop = asyncio.get_running_loop()
     loop.set_default_executor(concurrent.futures.ThreadPoolExecutor(max_workers=2))
+
+    # Warm up COT caches in background (don't block startup)
+    asyncio.create_task(warmup_cot_caches())
 
     yield
 

@@ -10,6 +10,7 @@ scheduled job can populate it once, and every subsequent consumer
 """
 
 import logging
+import math
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -18,6 +19,27 @@ from app.modules.prices.config import price_settings
 from app.modules.prices.yahoo import YahooDownloader
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_price_bars(bars: list[dict]) -> list[dict]:
+    """Replace NaN/Inf values with None for JSON serialization safety.
+
+    Yahoo Finance occasionally returns NaN for missing data points.
+    JSON does not support NaN/Inf, so we convert them to None.
+    """
+    if not bars:
+        return bars
+
+    sanitized = []
+    for bar in bars:
+        clean_bar = {}
+        for key, value in bar.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                clean_bar[key] = None
+            else:
+                clean_bar[key] = value
+        sanitized.append(clean_bar)
+    return sanitized
 
 MAX_PRICE_DOWNLOAD_WORKERS = 4
 
@@ -63,7 +85,8 @@ class PriceService:
             return []
 
         logger.info("%s → %s", cftc_code, ticker_symbol)
-        return self._downloader.download(ticker_symbol)
+        bars = self._downloader.download(ticker_symbol)
+        return _sanitize_price_bars(bars)
 
     # ------------------------------------------------------------------
     # Cache-aware single-market read
@@ -144,7 +167,8 @@ class PriceService:
         max_workers = min(MAX_PRICE_DOWNLOAD_WORKERS, len(unique_tickers)) if unique_tickers else 1
 
         def _download_one(ticker: str) -> tuple[str, list[dict]]:
-            return ticker, self._downloader.download(ticker)
+            bars = self._downloader.download(ticker)
+            return ticker, _sanitize_price_bars(bars)
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(_download_one, t): t for t in unique_tickers}

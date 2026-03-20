@@ -34,10 +34,13 @@ router = APIRouter(
 # Module-level caches
 # ------------------------------------------------------------------
 
-MARKET_CACHE_TTL = 600       # 10 min — individual market detail
-SCREENER_CACHE_TTL = 300     # 5 min — screener table
-MARKETS_LIST_CACHE_TTL = 600 # 10 min — markets list
-DASHBOARD_CACHE_TTL = 600    # 10 min — dashboard data
+# COT data updates only on Friday, so cache until then
+# Standard TTL: 6 hours for most data (survives restarts within day)
+# Dashboard/Screener can be longer as they're computationally expensive
+MARKET_CACHE_TTL = 3600 * 6      # 6 hours — individual market detail
+SCREENER_CACHE_TTL = 3600 * 6    # 6 hours — screener table (expensive to compute)
+MARKETS_LIST_CACHE_TTL = 3600 * 6 # 6 hours — markets list (rarely changes)
+DASHBOARD_CACHE_TTL = 3600 * 6   # 6 hours — dashboard data
 
 _market_cache = TTLCache(name="cot.market", default_ttl=MARKET_CACHE_TTL)
 _screener_cache = TTLCache(name="cot.screener", default_ttl=SCREENER_CACHE_TTL)
@@ -52,6 +55,57 @@ def invalidate_cot_caches() -> None:
     _markets_list_cache.invalidate()
     _dashboard_cache.invalidate()
     logger.info("All COT caches invalidated")
+
+
+async def warmup_cot_caches() -> None:
+    """Pre-populate COT caches on startup for faster first requests.
+
+    Called from main.py lifespan to ensure caches are warm before
+    serving traffic.
+    """
+    from app.modules.cot.dependencies import get_cot_service
+
+    logger.info("Starting COT cache warmup...")
+    service = get_cot_service()
+
+    # Popular assets to pre-cache (most frequently accessed)
+    popular_assets = [
+        # Crypto
+        "133741", "133LM4", "146LM1", "133LM5",
+        # Currencies
+        "099741", "096742", "092741", "090741", "089741",
+        # Indices
+        "13874U", "209747", "124608",
+        # Metals
+        "088691", "084691", "076651",
+        # Energy
+        "067651", "023651", "022651",
+    ]
+
+    # Warm screener-v2 cache first (most important)
+    for subtype in ["fo", "co"]:
+        try:
+            cache_key = f"screener-v2:{subtype}"
+            rows = await asyncio.to_thread(service.get_screener_v2, subtype)
+            if rows:
+                _screener_cache.set(cache_key, rows)
+                logger.info("Warmed screener-v2:%s (%d rows)", subtype, len(rows))
+        except Exception as e:
+            logger.warning("Warmup failed for screener-v2:%s: %s", subtype, e)
+
+    # Warm dashboard cache for popular assets
+    warmed = 0
+    for code in popular_assets:
+        try:
+            cache_key = f"dashboard:{code}:auto:fo"
+            data = await asyncio.to_thread(service.get_dashboard, code, None, "fo")
+            if data:
+                _dashboard_cache.set(cache_key, data)
+                warmed += 1
+        except Exception as e:
+            logger.warning("Warmup failed for dashboard %s: %s", code, e)
+
+    logger.info("COT cache warmup complete: %d/%d dashboards", warmed, len(popular_assets))
 
 
 # Register so scheduler can trigger cache invalidation without importing router

@@ -7,7 +7,17 @@ OpenAPI documentation, and contract enforcement.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+import math
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+
+
+def _sanitize_nan(value: Any) -> Any:
+    """Convert NaN/Inf floats to None for JSON serialization."""
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    return value
 
 
 # ------------------------------------------------------------------
@@ -44,11 +54,16 @@ class PriceBar(BaseModel):
     """Single daily OHLCV bar."""
 
     date: str
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: int
+    open: float | None = None
+    high: float | None = None
+    low: float | None = None
+    close: float | None = None
+    volume: int | None = None
+
+    @field_validator("open", "high", "low", "close", mode="before")
+    @classmethod
+    def sanitize_floats(cls, v: Any) -> float | None:
+        return _sanitize_nan(v)
 
 
 # ------------------------------------------------------------------
@@ -69,6 +84,14 @@ class WeekData(BaseModel):
     open_interest: float | None = None
     oi_change: float | None = None
     oi_pct: float | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def sanitize_all_floats(cls, data: dict) -> dict:
+        """Sanitize all float values in the week data."""
+        if isinstance(data, dict):
+            return {k: _sanitize_nan(v) for k, v in data.items()}
+        return data
 
 
 class StatsBlock(BaseModel):
@@ -128,6 +151,14 @@ class ScreenerRow(BaseModel):
     open_interest: float | None = None
     oi_change: float | None = None
     signals: list[SignalItem] = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def sanitize_all_floats(cls, data: dict) -> dict:
+        """Sanitize all float values in the screener row."""
+        if isinstance(data, dict):
+            return {k: _sanitize_nan(v) for k, v in data.items()}
+        return data
 
 
 # ------------------------------------------------------------------
@@ -191,8 +222,16 @@ class DashboardWeekSchema(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     date: str
-    open_interest: float
-    oi_change: float
+    open_interest: float | None = None
+    oi_change: float | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def sanitize_all_floats(cls, data: dict) -> dict:
+        """Sanitize all float values in the week data."""
+        if isinstance(data, dict):
+            return {k: _sanitize_nan(v) for k, v in data.items()}
+        return data
 
 
 class DashboardMarketInfo(BaseModel):
@@ -212,7 +251,12 @@ class DashboardPricePoint(BaseModel):
     """Single price data point."""
 
     date: str
-    close: float
+    close: float | None = None
+
+    @field_validator("close", mode="before")
+    @classmethod
+    def sanitize_close(cls, v: Any) -> float | None:
+        return _sanitize_nan(v)
 
 
 class ConcentrationData(BaseModel):
@@ -222,6 +266,11 @@ class ConcentrationData(BaseModel):
     top4_short_pct: float | None = None
     top8_long_pct: float | None = None
     top8_short_pct: float | None = None
+
+    @field_validator("top4_long_pct", "top4_short_pct", "top8_long_pct", "top8_short_pct", mode="before")
+    @classmethod
+    def sanitize_pcts(cls, v: Any) -> float | None:
+        return _sanitize_nan(v)
 
 
 class DashboardMeta(BaseModel):
