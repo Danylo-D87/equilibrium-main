@@ -165,86 +165,101 @@ export default function DashboardPage() {
                 </div>
             </header>
 
-            {/* Body — Dashboard blocks */}
+            {/* Body — Dashboard grid */}
             <main className="flex-1 overflow-auto px-3 md:px-5 py-3 md:py-4">
                 <ErrorBoundary>
-                    <div className="flex flex-col gap-3 md:gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
-                        {/* Block 1.1: Net Long Analysis */}
-                        <DashboardBlock title="Net Long Analysis" subtitle="Spec longs · percentile zones · Z-score">
-                            <div className="h-[75vh]">
-                                <NetAnalysisChart data={data} side="long" />
-                            </div>
+                        {/* Row 1: Core Analysis (600px) */}
+                        <DashboardBlock
+                            title="Net Long Analysis"
+                            subtitle="Spec longs · percentile zones · Z-score"
+                            className="lg:col-span-6 h-[400px] lg:h-[600px]"
+                        >
+                            <NetAnalysisChart data={data} side="long" />
                         </DashboardBlock>
 
-                        {/* Block 1.2: Net Short Analysis */}
-                        <DashboardBlock title="Net Short Analysis" subtitle="Spec shorts · percentile zones · Z-score">
-                            <div className="h-[75vh]">
-                                <NetAnalysisChart data={data} side="short" />
-                            </div>
+                        <DashboardBlock
+                            title="Net Short Analysis"
+                            subtitle="Spec shorts · percentile zones · Z-score"
+                            className="lg:col-span-6 h-[400px] lg:h-[600px]"
+                        >
+                            <NetAnalysisChart data={data} side="short" />
                         </DashboardBlock>
 
-                        {/* Block 2: Divergence */}
-                        <DashboardBlock title="Price vs Positioning" subtitle="Spec net vs Commercial net · Spread percentile">
-                            <div className="h-[75vh]">
-                                <DivergenceChart data={data} />
-                            </div>
+                        {/* Row 2: Market Dynamics (450px) */}
+                        <DashboardBlock
+                            title="Price vs Positioning"
+                            subtitle="Spec net vs Commercial net · Spread percentile"
+                            className="lg:col-span-5 h-[350px] lg:h-[450px]"
+                        >
+                            <DivergenceChart data={data} />
                         </DashboardBlock>
 
-                        {/* Block 3: OI Analysis */}
-                        <DashboardBlock title="Open Interest Pulse" subtitle="OI signal matrix · Strong demand / Long liquidation / Short covering / New supply">
-                            <div className="h-[75vh]">
-                                <OIAnalysisChart data={data} />
-                            </div>
+                        <DashboardBlock
+                            title="Open Interest Pulse"
+                            subtitle="OI signal matrix"
+                            className="lg:col-span-4 h-[350px] lg:h-[450px]"
+                        >
+                            <OIAnalysisChart data={data} />
                         </DashboardBlock>
 
-                        {/* Block 4: Distribution */}
-                        <DashboardBlock title="Distribution" subtitle="Net position histogram · current position in lookback window">
-                            <div className="h-[75vh]">
-                                <DistributionHistogram data={data} />
-                            </div>
+                        <DashboardBlock
+                            title="FLIP Detection"
+                            subtitle={`${data.flips.length} flips detected`}
+                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
+                        >
+                            <FlipChart data={data} />
                         </DashboardBlock>
 
-                        {/* Block 5: FLIP Detection */}
-                        <DashboardBlock title="FLIP Detection" subtitle={`${data.flips.length} flips detected · Long/Short bias`}>
-                            <div className="h-[75vh]">
-                                <FlipChart data={data} />
-                            </div>
+                        {/* Row 3: Signals & Power (450px) */}
+                        <DashboardBlock
+                            title="Market Power"
+                            subtitle="Spec % of OI"
+                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
+                        >
+                            <MarketPowerChart data={data} />
                         </DashboardBlock>
 
-                        {/* Block 6: Market Power */}
-                        <DashboardBlock title="Market Power" subtitle="Spec longs/shorts as % of OI · 30% dominance threshold">
-                            <div className="h-[75vh]">
-                                <MarketPowerChart data={data} />
-                            </div>
+                        <DashboardBlock
+                            title="Position Velocity"
+                            subtitle="Momentum acceleration"
+                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
+                        >
+                            <VelocityChart data={data} />
                         </DashboardBlock>
 
-                        {/* Block 7: Position Velocity */}
-                        <DashboardBlock title="Position Velocity" subtitle="Second derivative of net position · acceleration of momentum">
-                            <div className="h-[75vh]">
-                                <VelocityChart data={data} />
-                            </div>
+                        <DashboardBlock
+                            title="Sentiment Divergence"
+                            subtitle="Spec vs Comm percentile"
+                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
+                        >
+                            <SentimentDivergenceChart data={data} />
                         </DashboardBlock>
 
-                        {/* Block 8: Sentiment Divergence */}
-                        <DashboardBlock title="Sentiment Divergence" subtitle="Spec vs Comm percentile conflict · divergent zones">
-                            <div className="h-[75vh]">
-                                <SentimentDivergenceChart data={data} />
-                            </div>
+                        <DashboardBlock
+                            title="Distribution"
+                            subtitle="Net position histogram"
+                            className="lg:col-span-3 h-[350px] lg:h-[450px]"
+                        >
+                            <DistributionHistogram data={data} />
                         </DashboardBlock>
 
-                        {/* Block 9: Concentration Ratio */}
-                        <DashboardBlock title="Concentration Ratio" subtitle="Top-4 / Top-8 trader share of Open Interest">
-                            <div className="h-[75vh]">
-                                <ConcentrationGauge data={data} />
-                            </div>
+                        {/* Row 4: Auxiliary (350px) */}
+                        <DashboardBlock
+                            title="Concentration Ratio"
+                            subtitle="Top-4 / Top-8 trader share"
+                            className="lg:col-span-6 h-[300px] lg:h-[350px]"
+                        >
+                            <ConcentrationGauge data={data} />
                         </DashboardBlock>
 
-                        {/* Block 10: Triple Lookback */}
-                        <DashboardBlock title="Triple Lookback" subtitle="Percentile alignment across 1Y / 3Y / 5Y horizons">
-                            <div className="h-[75vh]">
-                                <TripleLookbackHeatmap data={data} />
-                            </div>
+                        <DashboardBlock
+                            title="Triple Lookback"
+                            subtitle="1Y / 3Y / 5Y alignment"
+                            className="lg:col-span-6 h-[300px] lg:h-[350px]"
+                        >
+                            <TripleLookbackHeatmap data={data} />
                         </DashboardBlock>
 
                     </div>
@@ -265,8 +280,8 @@ interface DashboardBlockProps {
 
 function DashboardBlock({ title, subtitle, className = '', children }: DashboardBlockProps) {
     return (
-        <div className={`bg-[#0d0d0d] border border-white/[0.04] rounded-lg overflow-hidden ${className}`}>
-            <div className="px-3 md:px-4 py-2 md:py-2.5 border-b border-white/[0.03] flex items-center justify-between">
+        <div className={`bg-[#0d0d0d] border border-white/[0.04] rounded-lg overflow-hidden flex flex-col ${className}`}>
+            <div className="px-3 md:px-4 py-2 md:py-2.5 border-b border-white/[0.03] flex items-center justify-between flex-shrink-0">
                 <div>
                     <h3 className="text-[12px] font-medium text-white/70 tracking-wide">{title}</h3>
                     {subtitle && (
@@ -274,7 +289,9 @@ function DashboardBlock({ title, subtitle, className = '', children }: Dashboard
                     )}
                 </div>
             </div>
-            {children}
+            <div className="flex-1 min-h-0">
+                {children}
+            </div>
         </div>
     );
 }
