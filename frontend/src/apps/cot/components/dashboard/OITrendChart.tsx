@@ -61,7 +61,7 @@ export default function OITrendChart({ data }: OITrendChartProps) {
         <div className="flex flex-col h-full">
             {/* Top 70%: Price */}
             <div className="h-[70%] w-full">
-                <PricePanel prices={priceSeries} />
+                <PricePanel priceSeries={priceSeries} weeks={weeks} />
             </div>
 
             {/* Bottom 30%: OI Trend */}

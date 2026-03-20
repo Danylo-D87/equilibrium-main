@@ -55,105 +55,105 @@ export default function SentimentDivergenceChart({ data }: SentimentDivergenceCh
 
             {/* Sentiment — 30% */}
             <div className="h-[30%] flex flex-col border-t border-white/[0.03]">
-            {/* Header badges */}
-            <div className="flex items-center gap-3 px-1 pt-1 flex-shrink-0">
-                <span className="text-[10px] text-white/30">
-                    Spec: <span className="text-blue-400">{latest?.spec ?? 0}%</span>
-                </span>
-                <span className="text-[10px] text-white/30">
-                    Comm: <span className="text-orange-400">{latest?.comm ?? 0}%</span>
-                </span>
-                {divergentCount > 0 && (
-                    <span className="text-[10px] text-purple-400 ml-auto">
-                        {divergentCount} divergent weeks
+                {/* Header badges */}
+                <div className="flex items-center gap-3 px-1 pt-1 flex-shrink-0">
+                    <span className="text-[10px] text-white/30">
+                        Spec: <span className="text-blue-400">{latest?.spec ?? 0}%</span>
                     </span>
-                )}
-            </div>
+                    <span className="text-[10px] text-white/30">
+                        Comm: <span className="text-orange-400">{latest?.comm ?? 0}%</span>
+                    </span>
+                    {divergentCount > 0 && (
+                        <span className="text-[10px] text-purple-400 ml-auto">
+                            {divergentCount} divergent weeks
+                        </span>
+                    )}
+                </div>
 
-            <div className="flex-1 min-h-0">
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData} margin={MARGIN_NARROW}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
-                        <XAxis
-                            dataKey="date"
-                            tickFormatter={fmtTick}
-                            tick={{ fontSize: 9, fill: D.axis }}
-                            axisLine={false}
-                            tickLine={false}
-                            interval="preserveStartEnd"
-                            minTickGap={60}
-                        />
-                        <YAxis
-                            orientation="right"
-                            domain={[0, 100]}
-                            ticks={[0, 10, 50, 90, 100]}
-                            tick={{ fontSize: 9, fill: D.axis }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={30}
-                            tickFormatter={(v: number) => `${v}`}
-                        />
+                <div className="flex-1 min-h-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={chartData} margin={MARGIN_NARROW}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                tickFormatter={fmtTick}
+                                tick={{ fontSize: 9, fill: D.axis }}
+                                axisLine={false}
+                                tickLine={false}
+                                interval="preserveStartEnd"
+                                minTickGap={60}
+                            />
+                            <YAxis
+                                orientation="right"
+                                domain={[0, 100]}
+                                ticks={[0, 10, 50, 90, 100]}
+                                tick={{ fontSize: 9, fill: D.axis }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={30}
+                                tickFormatter={(v: number) => `${v}`}
+                            />
 
-                        <Tooltip
-                            {...TOOLTIP_STYLE}
-                            labelFormatter={fmtDateShort}
-                            formatter={(value: number, name: string) => {
-                                const label = name === 'spec' ? 'Spec %ile' : name === 'comm' ? 'Comm %ile' : name;
-                                return [`${value.toFixed(1)}%`, label];
-                            }}
-                        />
+                            <Tooltip
+                                {...TOOLTIP_STYLE}
+                                labelFormatter={fmtDateShort}
+                                formatter={(value: number, name: string) => {
+                                    const label = name === 'spec' ? 'Spec %ile' : name === 'comm' ? 'Comm %ile' : name;
+                                    return [`${value.toFixed(1)}%`, label];
+                                }}
+                            />
 
-                        {/* Extreme zones */}
-                        <ReferenceLine y={90} stroke="rgba(239,68,68,0.3)" strokeDasharray="3 3" strokeWidth={0.7} />
-                        <ReferenceLine y={10} stroke="rgba(34,197,94,0.3)" strokeDasharray="3 3" strokeWidth={0.7} />
-                        <ReferenceLine y={50} stroke={D.axis} strokeDasharray="2 4" strokeWidth={0.5} />
+                            {/* Extreme zones */}
+                            <ReferenceLine y={90} stroke="rgba(239,68,68,0.3)" strokeDasharray="3 3" strokeWidth={0.7} />
+                            <ReferenceLine y={10} stroke="rgba(34,197,94,0.3)" strokeDasharray="3 3" strokeWidth={0.7} />
+                            <ReferenceLine y={50} stroke={D.axis} strokeDasharray="2 4" strokeWidth={0.5} />
 
-                        {/* Divergence fill — only visible in divergence weeks */}
-                        <Area
-                            type="monotone"
-                            dataKey="divFill"
-                            fill={D.divergenceFill}
-                            stroke="none"
-                            fillOpacity={1}
-                            baseValue={0}
-                        />
+                            {/* Divergence fill — only visible in divergence weeks */}
+                            <Area
+                                type="monotone"
+                                dataKey="divFill"
+                                fill={D.divergenceFill}
+                                stroke="none"
+                                fillOpacity={1}
+                                baseValue={0}
+                            />
 
-                        {/* Spec percentile line */}
-                        <Line
-                            type="monotone"
-                            dataKey="spec"
-                            stroke={D.specLine}
-                            dot={false}
-                            strokeWidth={1.5}
-                        />
+                            {/* Spec percentile line */}
+                            <Line
+                                type="monotone"
+                                dataKey="spec"
+                                stroke={D.specLine}
+                                dot={false}
+                                strokeWidth={1.5}
+                            />
 
-                        {/* Comm percentile line */}
-                        <Line
-                            type="monotone"
-                            dataKey="comm"
-                            stroke={D.commLine}
-                            dot={false}
-                            strokeWidth={1.5}
-                        />
-                    </ComposedChart>
-                </ResponsiveContainer>
-            </div>
+                            {/* Comm percentile line */}
+                            <Line
+                                type="monotone"
+                                dataKey="comm"
+                                stroke={D.commLine}
+                                dot={false}
+                                strokeWidth={1.5}
+                            />
+                        </ComposedChart>
+                    </ResponsiveContainer>
+                </div>
 
-            {/* Legend */}
-            <div className="h-5 flex items-center justify-center gap-4 text-[9px] text-white/30 flex-shrink-0">
-                <span className="flex items-center gap-1">
-                    <span className="w-3 h-[2px]" style={{ background: D.specLine }} />
-                    Spec %ile
-                </span>
-                <span className="flex items-center gap-1">
-                    <span className="w-3 h-[2px]" style={{ background: D.commLine }} />
-                    Comm %ile
-                </span>
-                <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-sm" style={{ background: D.divergenceFill }} />
-                    Divergence
-                </span>
-            </div>
+                {/* Legend */}
+                <div className="h-5 flex items-center justify-center gap-4 text-[9px] text-white/30 flex-shrink-0">
+                    <span className="flex items-center gap-1">
+                        <span className="w-3 h-[2px]" style={{ background: D.specLine }} />
+                        Spec %ile
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <span className="w-3 h-[2px]" style={{ background: D.commLine }} />
+                        Comm %ile
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-sm" style={{ background: D.divergenceFill }} />
+                        Divergence
+                    </span>
+                </div>
             </div>
         </div>
     );
