@@ -141,6 +141,8 @@ export interface LongShortBiasPoint {
 /** Full dashboard computed data, passed to Dashboard UI components. */
 export interface DashboardData {
     market: DashboardMarketInfo;
+    /** Available participant groups from the backend */
+    groups: { key: string; name: string; short: string; role: string; has_spread: boolean }[];
     /** Spec group metrics */
     specGroupKey: string;
     commGroupKey: string | null;

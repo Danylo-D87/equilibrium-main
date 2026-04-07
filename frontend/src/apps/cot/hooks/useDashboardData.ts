@@ -50,13 +50,14 @@ function sliceToRange(totalWeeks: number, range: DisplayRange): number {
  */
 export function useDashboardData(code: string | null) {
     const displayRange = useCotStore((s) => s.displayRange);
+    const dashboardGroupKey = useCotStore((s) => s.dashboardGroupKey);
 
     const { data: raw, isLoading, error } = useDashboardQuery(code);
 
     const dashboardData = useMemo<DashboardData | null>(() => {
         if (!raw) return null;
-        return computeDashboard(raw, displayRange);
-    }, [raw, displayRange]);
+        return computeDashboard(raw, displayRange, dashboardGroupKey);
+    }, [raw, displayRange, dashboardGroupKey]);
 
     return { data: dashboardData, raw, isLoading, error };
 }
@@ -64,12 +65,15 @@ export function useDashboardData(code: string | null) {
 /**
  * Pure computation: raw response + range/lookback → DashboardData.
  * Deterministic and memoizable.
+ *
+ * @param overrideGroupKey — if provided, use this group key instead of assetConfig default
  */
 export function computeDashboard(
     raw: DashboardResponse,
     displayRange: DisplayRange,
+    overrideGroupKey?: string | null,
 ): DashboardData {
-    const { market, weeks: rawWeeks, prices: allPrices, concentration, meta } = raw;
+    const { market, groups, weeks: rawWeeks, prices: allPrices, concentration, meta } = raw;
 
     // Backend sends oldest→newest; calculations expect newest-first (index 0 = current).
     const allWeeks = [...rawWeeks].reverse();
@@ -77,8 +81,11 @@ export function computeDashboard(
     // Use frontend ASSET_CONFIG for accurate per-market group mapping
     // (backend uses flat mapping that doesn't distinguish Indices/Crypto comm groups)
     const cfg = getAssetConfig(market.code);
-    const specGroupKey = cfg.specGroup;
-    const commGroupKey = cfg.commGroup;
+    const specGroupKey = overrideGroupKey || cfg.specGroup;
+    // When user overrides group, comm is the opposite default (or null if same)
+    const commGroupKey = overrideGroupKey
+        ? (cfg.commGroup !== overrideGroupKey ? cfg.commGroup : null)
+        : cfg.commGroup;
 
     // Slice to display range (newest-first, take first N)
     const displayCount = sliceToRange(allWeeks.length, displayRange);
@@ -146,6 +153,7 @@ export function computeDashboard(
 
     return {
         market,
+        groups,
         specGroupKey,
         commGroupKey,
         weeks: weeksChart,
@@ -176,3 +184,4 @@ export function computeDashboard(
         longShortBias: longShortBiasChart,
     };
 }
+

@@ -10,6 +10,8 @@ interface CotState {
 
     // Dashboard
     displayRange: DisplayRange;
+    /** Selected participant group key for dashboard, null = default from assetConfig */
+    dashboardGroupKey: string | null;
 
     // Transient
     fitMode: boolean;
@@ -27,6 +29,7 @@ interface CotState {
     setDocsOpen: (open: boolean) => void;
     setChartOpen: (open: boolean) => void;
     setDisplayRange: (range: DisplayRange) => void;
+    setDashboardGroupKey: (key: string | null) => void;
     setAvailableReports: (reports: ReportType[]) => void;
 }
 
@@ -40,6 +43,7 @@ export const useCotStore = create<CotState>()(
 
             // Dashboard defaults
             displayRange: '2Y',
+            dashboardGroupKey: null,
 
             // Transient defaults
             fitMode: false,
@@ -56,6 +60,7 @@ export const useCotStore = create<CotState>()(
             setDocsOpen: (open) => set({ docsOpen: open }),
             setChartOpen: (open) => set({ chartOpen: open }),
             setDisplayRange: (displayRange) => set({ displayRange }),
+            setDashboardGroupKey: (dashboardGroupKey) => set({ dashboardGroupKey }),
             setAvailableReports: (availableReports) => set({ availableReports }),
         }),
         {
@@ -65,6 +70,7 @@ export const useCotStore = create<CotState>()(
                 subtype: state.subtype,
                 selectedMarketCode: state.selectedMarketCode,
                 displayRange: state.displayRange,
+                dashboardGroupKey: state.dashboardGroupKey,
             }),
         },
     ),

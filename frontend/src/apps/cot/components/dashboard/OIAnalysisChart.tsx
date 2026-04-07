@@ -79,6 +79,15 @@ export default function OIAnalysisChart({ data }: OIAnalysisChartProps) {
 
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData} margin={MARGIN} syncId="oiPulse">
+                        <defs>
+                            <filter id="glow-oi-price" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
                         <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 9, fill: D.axis }} axisLine={false} tickLine={false} hide />
                         <YAxis yAxisId="price" orientation="right" tickFormatter={fmtK} tick={{ fontSize: 9, fill: D.axis }} axisLine={false} tickLine={false} width={50} domain={['auto', 'auto']} />
@@ -111,7 +120,7 @@ export default function OIAnalysisChart({ data }: OIAnalysisChartProps) {
                         />
 
                         {/* Colored dots on price line showing signal */}
-                        <Line yAxisId="price" type="monotone" dataKey="price" stroke={D.priceLine} dot={false} strokeWidth={1.5} connectNulls />
+                        <Line yAxisId="price" type="monotone" dataKey="price" stroke={D.priceLine} dot={false} strokeWidth={2} filter="url(#glow-oi-price)" connectNulls />
 
                         {/* Signal colored bar segments (thin vertical ticks at price level) */}
                         <Bar yAxisId="price" dataKey="barHeight" barSize={2} opacity={0.15}>
@@ -130,13 +139,19 @@ export default function OIAnalysisChart({ data }: OIAnalysisChartProps) {
             <div className="h-[30%] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData} margin={MARGIN_NARROW} syncId="oiPulse">
+                        <defs>
+                            <linearGradient id="gradient-oi" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
                         <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 9, fill: D.axis }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={60} />
                         <YAxis yAxisId="oi" orientation="right" tickFormatter={fmtK} tick={{ fontSize: 9, fill: D.axis }} axisLine={false} tickLine={false} width={50} />
 
                         <Tooltip {...TOOLTIP_STYLE} labelFormatter={fmtDateShort} formatter={(v: number) => [fmtK(v), 'Open Interest']} />
 
-                        <Area yAxisId="oi" type="monotone" dataKey="oi" stroke="#6366f1" fill="rgba(99,102,241,0.1)" strokeWidth={1.2} dot={false} />
+                        <Area yAxisId="oi" type="monotone" dataKey="oi" stroke="#6366f1" fill="url(#gradient-oi)" strokeWidth={1.5} dot={false} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>

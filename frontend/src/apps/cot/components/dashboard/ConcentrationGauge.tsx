@@ -13,7 +13,6 @@
  */
 
 import type { DashboardData } from '../../types/dashboard';
-import PricePanel from './PricePanel';
 
 // ─── Constants ───────────────────────────────────────────────
 
@@ -75,7 +74,7 @@ export default function ConcentrationGauge({ data }: ConcentrationGaugeProps) {
         return (
             <div className="h-full flex items-center justify-center">
                 <span className="text-white/20 text-xs tracking-wider uppercase">
-                    Concentration data not available
+                    Data not available
                 </span>
             </div>
         );
@@ -87,16 +86,9 @@ export default function ConcentrationGauge({ data }: ConcentrationGaugeProps) {
     const needleEnd = polarToCartesian(CX, CY, R - STROKE / 2 - 4, needleAngle);
 
     return (
-        <div className="flex flex-col h-full">
-            {/* Price panel — 70% */}
-            <div className="h-[70%]">
-                <PricePanel priceSeries={data.priceSeries} weeks={data.weeks} />
-            </div>
-
-            {/* Gauge — 30% */}
-            <div className="h-[30%] flex items-center justify-center gap-4 px-3 border-t border-white/[0.03]">
+        <div className="flex flex-col h-full items-center justify-center p-4">
             {/* SVG Gauge */}
-            <svg width={SIZE} height={SIZE / 2 + 30} viewBox={`0 0 ${SIZE} ${SIZE / 2 + 30}`} className="flex-shrink-0">
+            <svg width={SIZE} height={SIZE / 2 + 30} viewBox={`0 0 ${SIZE} ${SIZE / 2 + 30}`} className="flex-shrink-0 mb-4">
                 {/* Zone arcs */}
                 {ZONES.map((z) => (
                     <path
@@ -163,12 +155,11 @@ export default function ConcentrationGauge({ data }: ConcentrationGaugeProps) {
             </svg>
 
             {/* Side metrics */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
+            <div className="grid grid-cols-2 w-full gap-x-4 gap-y-3 pt-4 border-t border-white/[0.04] text-[10px]">
                 <MetricCell label="Top-4 Long" value={concentration.top4_long_pct} />
-                <MetricCell label="Top-4 Short" value={concentration.top4_short_pct} />
                 <MetricCell label="Top-8 Long" value={concentration.top8_long_pct} />
+                <MetricCell label="Top-4 Short" value={concentration.top4_short_pct} />
                 <MetricCell label="Top-8 Short" value={concentration.top8_short_pct} />
-            </div>
             </div>
         </div>
     );
@@ -177,9 +168,9 @@ export default function ConcentrationGauge({ data }: ConcentrationGaugeProps) {
 function MetricCell({ label, value }: { label: string; value: number | null }) {
     const zone = value != null ? getZoneForValue(value) : null;
     return (
-        <div className="text-center">
-            <div className="text-white/25 uppercase tracking-wider text-[8px] mb-0.5">{label}</div>
-            <div className="font-mono font-semibold text-[13px]" style={{ color: zone ? zone.color : 'rgba(255,255,255,0.2)' }}>
+        <div className="text-center group">
+            <div className="text-white/25 uppercase tracking-wider text-[8px] mb-1 group-hover:text-white/40 transition-colors">{label}</div>
+            <div className="font-mono font-semibold text-[14px]" style={{ color: zone ? zone.color : 'rgba(255,255,255,0.2)' }}>
                 {value != null ? `${value.toFixed(1)}%` : '—'}
             </div>
         </div>

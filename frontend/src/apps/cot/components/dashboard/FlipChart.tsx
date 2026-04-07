@@ -79,6 +79,15 @@ export default function FlipChart({ data }: FlipChartProps) {
             <div className="h-[70%] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={priceData} margin={MARGIN}>
+                        <defs>
+                            <filter id="glow-flip-price" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
                         <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 9, fill: D.axis }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={60} />
                         <YAxis yAxisId="price" orientation="right" tickFormatter={fmtK} tick={{ fontSize: 9, fill: D.axis }} axisLine={false} tickLine={false} width={50} domain={['auto', 'auto']} />
@@ -116,7 +125,8 @@ export default function FlipChart({ data }: FlipChartProps) {
                             type="monotone"
                             dataKey="price"
                             stroke={D.priceLine}
-                            strokeWidth={1.5}
+                            strokeWidth={2}
+                            filter="url(#glow-flip-price)"
                             connectNulls
                             dot={(props: any) => {
                                 const { cx, cy, payload } = props;
@@ -147,6 +157,16 @@ export default function FlipChart({ data }: FlipChartProps) {
                 <div className="w-full h-[30%] border-t border-white/[0.03]">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={longShortBias} margin={MARGIN_NARROW}>
+                            <defs>
+                                <linearGradient id="gradient-long-bias" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0.05} />
+                                </linearGradient>
+                                <linearGradient id="gradient-short-bias" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0.05} />
+                                </linearGradient>
+                            </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
                             <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 8, fill: D.axis }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={80} hide />
                             <YAxis
@@ -173,8 +193,8 @@ export default function FlipChart({ data }: FlipChartProps) {
                                 }}
                             />
                             <ReferenceLine y={50} stroke={D.warningDiamond} strokeDasharray="4 4" strokeWidth={0.6} />
-                            <Area type="monotone" dataKey="longPct" stackId="bias" fill="rgba(34,197,94,0.25)" stroke="rgba(34,197,94,0.6)" strokeWidth={1} />
-                            <Area type="monotone" dataKey="shortPct" stackId="bias" fill="rgba(239,68,68,0.25)" stroke="rgba(239,68,68,0.6)" strokeWidth={1} />
+                            <Area type="monotone" dataKey="longPct" stackId="bias" fill="url(#gradient-long-bias)" stroke="rgba(34,197,94,0.6)" strokeWidth={1} />
+                            <Area type="monotone" dataKey="shortPct" stackId="bias" fill="url(#gradient-short-bias)" stroke="rgba(239,68,68,0.6)" strokeWidth={1} />
                         </ComposedChart>
                     </ResponsiveContainer>
                 </div>

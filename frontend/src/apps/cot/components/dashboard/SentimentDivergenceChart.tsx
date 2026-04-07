@@ -73,6 +73,26 @@ export default function SentimentDivergenceChart({ data }: SentimentDivergenceCh
                 <div className="flex-1 min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={chartData} margin={MARGIN_NARROW}>
+                            <defs>
+                                <filter id="glow-spec" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <filter id="glow-comm" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="3" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <linearGradient id="gradient-div" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={D.divergenceFill} stopOpacity={0.6} />
+                                    <stop offset="95%" stopColor={D.divergenceFill} stopOpacity={0.1} />
+                                </linearGradient>
+                            </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
                             <XAxis
                                 dataKey="date"
@@ -112,7 +132,7 @@ export default function SentimentDivergenceChart({ data }: SentimentDivergenceCh
                             <Area
                                 type="monotone"
                                 dataKey="divFill"
-                                fill={D.divergenceFill}
+                                fill="url(#gradient-div)"
                                 stroke="none"
                                 fillOpacity={1}
                                 baseValue={0}
@@ -124,7 +144,8 @@ export default function SentimentDivergenceChart({ data }: SentimentDivergenceCh
                                 dataKey="spec"
                                 stroke={D.specLine}
                                 dot={false}
-                                strokeWidth={1.5}
+                                strokeWidth={2}
+                                filter="url(#glow-spec)"
                             />
 
                             {/* Comm percentile line */}
@@ -133,7 +154,8 @@ export default function SentimentDivergenceChart({ data }: SentimentDivergenceCh
                                 dataKey="comm"
                                 stroke={D.commLine}
                                 dot={false}
-                                strokeWidth={1.5}
+                                strokeWidth={2}
+                                filter="url(#glow-comm)"
                             />
                         </ComposedChart>
                     </ResponsiveContainer>

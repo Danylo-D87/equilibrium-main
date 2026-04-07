@@ -1,13 +1,14 @@
-﻿import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { formatNumber, formatDate } from '../utils/formatters';
 import { changeBg } from '../utils/colors';
 import { SECTORS, type Sector } from '../utils/assetConfig';
 import { useAllScreenerData } from '../hooks/useMarketQueries';
 import { enrichV2Rows, type V2EnrichedRow } from '../utils/screenerV2';
+import { useWatchlist } from '../hooks/useWatchlist';
 import Spinner from '@/components/ui/Spinner';
 
-const ROW_HEIGHT = 32;
+const ROW_HEIGHT = 34;
 
 interface ScreenerTableProps {
     onSelectMarket: (code: string) => void;
@@ -89,6 +90,7 @@ const SECTOR_FILTERS: { key: string; label: string }[] = [
 
 export default function ScreenerTable({ onSelectMarket }: ScreenerTableProps) {
     const { screenerData, isLoading: loading, error } = useAllScreenerData();
+    const { isPinned, toggleStar } = useWatchlist();
     const [search, setSearch] = useState('');
     const [sector, setSector] = useState('all');
     const [sortKey, setSortKey] = useState('flip_severity');
@@ -132,9 +134,14 @@ export default function ScreenerTable({ onSelectMarket }: ScreenerTableProps) {
             );
         }
 
-        // Sort
+        // Sort — pinned first, then by sortKey
         const dir = sortDir === 'asc' ? 1 : -1;
         list.sort((a, b) => {
+            // Pinned markets always float to top
+            const ap = isPinned(a.code) ? 1 : 0;
+            const bp = isPinned(b.code) ? 1 : 0;
+            if (ap !== bp) return bp - ap;
+
             const va = (a as unknown as Record<string, unknown>)[sortKey];
             const vb = (b as unknown as Record<string, unknown>)[sortKey];
 
@@ -148,7 +155,7 @@ export default function ScreenerTable({ onSelectMarket }: ScreenerTableProps) {
         });
 
         return list;
-    }, [data, sector, search, sortKey, sortDir]);
+    }, [data, sector, search, sortKey, sortDir, isPinned]);
 
     // Sector counts
     const sectorCounts = useMemo(() => {
@@ -243,6 +250,14 @@ export default function ScreenerTable({ onSelectMarket }: ScreenerTableProps) {
                 <table className="text-[11px] leading-tight" style={{ minWidth: TOTAL_WIDTH, borderCollapse: 'separate', borderSpacing: 0 }}>
                     <thead className="sticky top-0 z-20">
                         <tr style={{ background: '#0a0907' }}>
+                            {/* Star column header */}
+                            <th
+                                className="px-1 py-2.5 text-[10px] font-medium border-b border-r border-border-subtle select-none text-muted text-center"
+                                style={{ width: 36, minWidth: 36, maxWidth: 36, background: '#0a0907' }}
+                                title="Watchlist"
+                            >
+                                ★
+                            </th>
                             {V2_COLUMNS.map(col => (
                                 <th
                                     key={col.key}
@@ -250,7 +265,7 @@ export default function ScreenerTable({ onSelectMarket }: ScreenerTableProps) {
                                     className={`px-2 py-2.5 text-[10px] font-medium border-b border-r border-border-subtle select-none uppercase tracking-[0.10em] ${
                                         col.sortable ? 'cursor-pointer hover:text-white' : ''
                                     } ${sortKey === (col.sortBy || col.key) ? 'text-white' : 'text-muted'} ${
-                                        col.sticky ? 'sticky left-0 z-10' : ''
+                                        col.sticky ? 'sticky left-[36px] z-10' : ''
                                     }`}
                                     style={{ width: col.width, minWidth: col.width, maxWidth: col.width, textAlign: col.align, background: '#0a0907' }}
                                     title={col.label}
@@ -265,23 +280,34 @@ export default function ScreenerTable({ onSelectMarket }: ScreenerTableProps) {
                     </thead>
                     <tbody>
                         {rowVirtualizer.getVirtualItems()[0]?.start > 0 && (
-                            <tr><td colSpan={V2_COLUMNS.length} style={{ height: rowVirtualizer.getVirtualItems()[0].start, padding: 0, border: 'none' }} /></tr>
+                            <tr><td colSpan={V2_COLUMNS.length + 1} style={{ height: rowVirtualizer.getVirtualItems()[0].start, padding: 0, border: 'none' }} /></tr>
                         )}
                         {rowVirtualizer.getVirtualItems().map(vr => {
                             const row = rows[vr.index];
+                            const starred = isPinned(row.code);
                             return (
                                 <tr
                                     key={row.code}
                                     data-index={vr.index}
                                     ref={rowVirtualizer.measureElement}
                                     onClick={() => onSelectMarket(row.code)}
-                                    className="border-b border-border-subtle hover:bg-surface-hover/30 cursor-pointer transition-colors duration-300 group"
+                                    className={`border-b border-border-subtle hover:bg-surface-hover/30 cursor-pointer transition-colors duration-300 group ${starred ? 'bg-white/[0.015]' : ''}`}
                                 >
+                                    {/* Star cell */}
+                                    <td
+                                        className="px-1 py-[7px] border-r border-border-subtle text-center"
+                                        style={{ width: 36, minWidth: 36 }}
+                                        onClick={e => { e.stopPropagation(); toggleStar(row.code); }}
+                                    >
+                                        <span className={`text-[12px] cursor-pointer transition-colors duration-200 ${starred ? 'text-amber-400' : 'text-white/10 hover:text-white/30'}`}>
+                                            ★
+                                        </span>
+                                    </td>
                                     {V2_COLUMNS.map(col => (
                                         <td
                                             key={col.key}
                                             className={`px-2 py-[7px] border-r border-border-subtle whitespace-nowrap ${
-                                                col.sticky ? 'sticky left-0 z-10 bg-background group-hover:bg-surface-hover transition-colors' : ''
+                                                col.sticky ? 'sticky left-[36px] z-10 bg-background group-hover:bg-surface-hover transition-colors' : ''
                                             }`}
                                             style={{ width: col.width, minWidth: col.width, textAlign: col.align, backgroundColor: col.sticky ? undefined : getCellBg(row, col) }}
                                         >
@@ -295,7 +321,7 @@ export default function ScreenerTable({ onSelectMarket }: ScreenerTableProps) {
                             const items = rowVirtualizer.getVirtualItems();
                             const last = items[items.length - 1];
                             const pad = last ? rowVirtualizer.getTotalSize() - last.end : 0;
-                            return pad > 0 ? <tr><td colSpan={V2_COLUMNS.length} style={{ height: pad, padding: 0, border: 'none' }} /></tr> : null;
+                            return pad > 0 ? <tr><td colSpan={V2_COLUMNS.length + 1} style={{ height: pad, padding: 0, border: 'none' }} /></tr> : null;
                         })()}
                     </tbody>
                 </table>

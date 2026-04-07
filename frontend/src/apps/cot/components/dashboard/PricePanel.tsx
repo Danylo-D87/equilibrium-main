@@ -33,6 +33,15 @@ export default function PricePanel({ priceSeries, weeks, syncId }: PricePanelPro
     return (
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={MARGIN} syncId={syncId}>
+                <defs>
+                    <filter id="glow-price-panel" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={D.grid} vertical={false} />
                 <XAxis
                     dataKey="date"
@@ -65,7 +74,8 @@ export default function PricePanel({ priceSeries, weeks, syncId }: PricePanelPro
                     dataKey="price"
                     stroke={D.priceLine}
                     dot={false}
-                    strokeWidth={1.5}
+                    strokeWidth={2}
+                    filter="url(#glow-price-panel)"
                     connectNulls
                 />
             </ComposedChart>
