@@ -96,6 +96,7 @@ export default function KeyMetrics({ data }: KeyMetricsProps) {
         try {
             const blob = await domToBlob(blockRef.current, {
                 scale: 2, // High DPI
+                backgroundColor: '#0a0a0a',
                 style: { backgroundColor: '#0a0a0a', padding: '16px' }
             });
             if (blob) {

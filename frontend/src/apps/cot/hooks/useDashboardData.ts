@@ -20,17 +20,17 @@ import {
     calcSpreadPercentile,
     calcLongShortBias,
 } from '../utils/calculations';
-import type { DashboardResponse, DashboardData, DisplayRange } from '../types';
+import type { DashboardResponse, DashboardData, DisplayRange, ReportType } from '../types';
 import { DISPLAY_RANGES } from '../types';
 
 /** Fetch raw dashboard data. */
-export function useDashboardQuery(code: string | null) {
+export function useDashboardQuery(code: string | null, reportType?: ReportType) {
     return useQuery({
-        queryKey: ['dashboard', code],
+        queryKey: ['dashboard', code, reportType ?? null],
         queryFn: () => {
             if (!code) throw new Error('No market code');
             const cfg = getAssetConfig(code);
-            return fetchDashboard(code, cfg.primaryReport, 'fo');
+            return fetchDashboard(code, reportType || cfg.primaryReport, 'fo');
         },
         enabled: !!code,
         staleTime: 5 * 60_000,
@@ -48,11 +48,11 @@ function sliceToRange(totalWeeks: number, range: DisplayRange): number {
  * Full dashboard hook: fetches data and computes all metrics.
  * Returns loading/error state plus computed `DashboardData`.
  */
-export function useDashboardData(code: string | null) {
+export function useDashboardData(code: string | null, reportType?: ReportType) {
     const displayRange = useCotStore((s) => s.displayRange);
     const dashboardGroupKey = useCotStore((s) => s.dashboardGroupKey);
 
-    const { data: raw, isLoading, error } = useDashboardQuery(code);
+    const { data: raw, isLoading, error } = useDashboardQuery(code, reportType);
 
     const dashboardData = useMemo<DashboardData | null>(() => {
         if (!raw) return null;
@@ -78,14 +78,12 @@ export function computeDashboard(
     // Backend sends oldest→newest; calculations expect newest-first (index 0 = current).
     const allWeeks = [...rawWeeks].reverse();
 
-    // Use frontend ASSET_CONFIG for accurate per-market group mapping
-    // (backend uses flat mapping that doesn't distinguish Indices/Crypto comm groups)
-    const cfg = getAssetConfig(market.code);
-    const specGroupKey = overrideGroupKey || cfg.specGroup;
+    // Use backend-provided group mapping (correct for the fetched report type)
+    const specGroupKey = overrideGroupKey || market.spec_group;
     // When user overrides group, comm is the opposite default (or null if same)
     const commGroupKey = overrideGroupKey
-        ? (cfg.commGroup !== overrideGroupKey ? cfg.commGroup : null)
-        : cfg.commGroup;
+        ? (market.comm_group !== overrideGroupKey ? market.comm_group : null)
+        : market.comm_group;
 
     // Slice to display range (newest-first, take first N)
     const displayCount = sliceToRange(allWeeks.length, displayRange);

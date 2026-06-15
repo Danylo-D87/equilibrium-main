@@ -110,7 +110,7 @@ export default function DashboardPage() {
         subtype, setSubtype,
         availableReports,
     } = useCotStore();
-    const { data, isLoading, error } = useDashboardData(code ?? null);
+    const { data, isLoading, error } = useDashboardData(code ?? null, reportType);
 
     // Active sub-tab
     const [activeTab, setActiveTab] = useState<DashboardTab>('dashboard');
@@ -271,31 +271,33 @@ export default function DashboardPage() {
 
                     <div className="flex-1" />
 
-                    {/* Report Type & Subtype (Only relevant for Table view) */}
+                    {/* Report Type */}
+                    <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/[0.03] border border-white/[0.04] rounded-full p-0.5 mr-2">
+                        {REPORT_TYPES.map((rt) => {
+                            const available = availableReports.length === 0 || availableReports.includes(rt.key as ReportType);
+                            return (
+                                <button
+                                    key={rt.key}
+                                    onClick={() => available && setReportType(rt.key as ReportType)}
+                                    disabled={!available}
+                                    className={`px-2.5 py-0.5 text-[10px] font-medium tracking-[0.08em] uppercase transition-all duration-300 rounded-full ${
+                                        !available
+                                            ? 'text-white/10 cursor-not-allowed'
+                                            : reportType === rt.key
+                                                ? 'text-white/90 bg-white/[0.08]'
+                                                : 'text-white/30 hover:text-white/50'
+                                    }`}
+                                    title={!available ? `${rt.label} not available for this market` : undefined}
+                                >
+                                    {rt.shortLabel}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Subtype (Only relevant for Table view) */}
                     {activeTab === 'table' && (
                         <>
-                            <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/[0.03] border border-white/[0.04] rounded-full p-0.5 mr-2">
-                                {REPORT_TYPES.map((rt) => {
-                                    const available = availableReports.length === 0 || availableReports.includes(rt.key as ReportType);
-                                    return (
-                                        <button
-                                            key={rt.key}
-                                            onClick={() => available && setReportType(rt.key as ReportType)}
-                                            disabled={!available}
-                                            className={`px-2.5 py-0.5 text-[10px] font-medium tracking-[0.08em] uppercase transition-all duration-300 rounded-full ${
-                                                !available
-                                                    ? 'text-white/10 cursor-not-allowed'
-                                                    : reportType === rt.key
-                                                        ? 'text-white/90 bg-white/[0.08]'
-                                                        : 'text-white/30 hover:text-white/50'
-                                            }`}
-                                            title={!available ? `${rt.label} not available for this market` : undefined}
-                                        >
-                                            {rt.shortLabel}
-                                        </button>
-                                    );
-                                })}
-                            </div>
                             <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/[0.03] border border-white/[0.04] rounded-full p-0.5 mr-3">
                                 {SUBTYPES.map((st) => (
                                     <button
@@ -476,6 +478,7 @@ function DashboardBlock({ title, subtitle, className = '', onExpand, children }:
         try {
             const blob = await domToBlob(blockRef.current, {
                 scale: 2,
+                backgroundColor: '#0a0a0a',
                 style: {
                     backgroundColor: '#0a0a0a',
                 }
