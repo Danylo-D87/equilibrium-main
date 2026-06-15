@@ -4,7 +4,7 @@
  */
 
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState, useRef, Suspense, lazy } from 'react';
+import { useEffect, useState, useRef, useMemo, Suspense, lazy } from 'react';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useMarketData } from '../hooks/useMarketQueries';
 import { useCotStore } from '../store/useCotStore';
@@ -132,6 +132,17 @@ export default function DashboardPage() {
         }
     }, [data, setAvailableReports]);
 
+    // BubbleChartView expects MarketData shape where weeks are newest-first
+    // (it does its own .reverse() internally). DashboardData.weeks are already
+    // oldest-first, so we reverse them back to newest-first for compatibility.
+    const chartCompatData = useMemo(() => {
+        if (!data) return null;
+        return {
+            ...data,
+            weeks: [...data.weeks].reverse(),
+        };
+    }, [data]) as any;
+
     if (isLoading || !data) {
         return (
             <div className="flex-1 flex items-center justify-center">
@@ -221,10 +232,6 @@ export default function DashboardPage() {
 
     const activeFullscreenBlock = blocks.find((b) => b.key === fullscreenBlock);
 
-    // Determine if the charts tabs should use raw dashboard data
-    // BubbleChartView needs MarketData (raw) which includes weeks, groups, prices, market
-    // The dashboard `data` has a compatible shape since it contains market, groups, weeks, prices
-    const chartCompatData = data as any; // DashboardData has all fields BubbleChartView needs
 
     return (
         <>

@@ -26,6 +26,14 @@ export interface V2EnrichedRow extends ScreenerRow {
     flip_tag: string;
     /** Numeric severity for sorting (5 = FLIP … 0 = Neutral). */
     flip_severity: number;
+    /** 52‑week COT Index (0–100) for the retail (Non‑Reportable) group. */
+    retail_percentile: number | null;
+    /** Approximate Z‑Score for the retail group. */
+    retail_zscore: number | null;
+    /** Retail overheating tag (🔥 Overheated, ⚠️ Hot, Neutral, ❄️ Cool, 🧊 Cold). */
+    retail_heat_tag: string;
+    /** Numeric severity for sorting (4 = Overheated … 0 = Neutral). */
+    retail_heat_severity: number;
 }
 
 // ─── Internals ───────────────────────────────────────────────
@@ -104,9 +112,37 @@ function computeFlipTag(
     return { tag: 'Neutral', severity: 0 };
 }
 
+/**
+ * Compute retail (Non-Reportable) overheating tag.
+ * Retail is role="small" so high percentile = retail overheated (bearish contrarian).
+ *
+ *  1. 🔥 Overheated  — percentile ≥ 90 (retail extremely long)
+ *  2. ⚠️ Hot         — percentile ≥ 75
+ *  3. ❄️ Cool        — percentile ≤ 25
+ *  4. 🧊 Cold        — percentile ≤ 10 (retail extremely short)
+ *  5. Neutral        — in between
+ */
+function computeRetailHeatTag(
+    percentile: number | null,
+): { tag: string; severity: number } {
+    if (percentile == null) return { tag: 'Neutral', severity: 0 };
+
+    if (percentile >= 90) return { tag: '🔥 Max Long', severity: 4 };
+    if (percentile >= 75) return { tag: '⚠️ Low Long', severity: 3 };
+    if (percentile <= 10) return { tag: '🧊 Max Short', severity: 2 };
+    if (percentile <= 25) return { tag: '❄️ Low Short', severity: 1 };
+
+    return { tag: 'Neutral', severity: 0 };
+}
+
 /** Spec‑group key for a given report type (g1 for legacy, g3 for disagg/tff). */
 function getSpecGroup(reportType: string): string {
     return reportType === 'legacy' ? 'g1' : 'g3';
+}
+
+/** Retail (Non-Reportable) group key: g5 for disagg/tff, g3 for legacy. */
+function getRetailGroup(reportType: string): string {
+    return reportType === 'legacy' ? 'g3' : 'g5';
 }
 
 // ─── Public API ──────────────────────────────────────────────
@@ -134,6 +170,12 @@ export function enrichV2Rows(rows: ScreenerRow[], fallbackReportType = 'legacy')
         const specZScore = cotIndexToZScore(specPercentile);
         const specWow = (row[`${specGroup}_change`] as number) ?? null;
 
+        // Retail (Non-Reportable) group
+        const retailGroup = getRetailGroup(rt);
+        const retailPercentile = (row[`cot_${retailGroup}_1y`] as number) ?? null;
+        const retailZScore = cotIndexToZScore(retailPercentile);
+        const { tag: retailTag, severity: retailSeverity } = computeRetailHeatTag(retailPercentile);
+
         // OI Trend: oi_change as % of open_interest
         const oiTrendPct = row.open_interest > 0 && row.oi_change != null
             ? Math.round((row.oi_change / row.open_interest) * 10000) / 100
@@ -151,6 +193,10 @@ export function enrichV2Rows(rows: ScreenerRow[], fallbackReportType = 'legacy')
             oi_trend_pct: oiTrendPct,
             flip_tag: tag,
             flip_severity: severity,
+            retail_percentile: retailPercentile,
+            retail_zscore: retailZScore,
+            retail_heat_tag: retailTag,
+            retail_heat_severity: retailSeverity,
         };
     });
 }

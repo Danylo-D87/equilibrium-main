@@ -299,6 +299,7 @@ class CotService:
                     week[f"{pfx}_net"] = (long_val or 0) - (r.get(f"{pfx}_short") or 0)
                     week[f"{pfx}_change_long"] = r.get(f"{pfx}_long_change") or 0
                     week[f"{pfx}_change_short"] = r.get(f"{pfx}_short_change") or 0
+                    week[f"{pfx}_change"] = week[f"{pfx}_change_long"] - week[f"{pfx}_change_short"]
             weeks.append(week)
 
         # 6. Groups metadata

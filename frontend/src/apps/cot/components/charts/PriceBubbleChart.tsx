@@ -134,7 +134,12 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }: Price
         };
 
         // ΔNet = change_long - change_short = agg_change
-        const absDeltas = weeksData.map(w => Math.abs(w.agg_change || 0)).filter(v => v > 0).sort((a, b) => a - b);
+        // Fallback: if agg_change is missing, derive from change_long/change_short
+        const absDeltas = weeksData.map(w => {
+            const direct = Math.abs(w.agg_change || 0);
+            if (direct > 0) return direct;
+            return Math.abs((w.agg_change_long || 0) - (w.agg_change_short || 0));
+        }).filter(v => v > 0).sort((a, b) => a - b);
         const maxAbsDelta = absDeltas.length ? absDeltas[absDeltas.length - 1] : 1;
 
         // Sort COT entries chronologically for period detection
@@ -174,7 +179,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }: Price
             const sigKey = detectCotSignal(priceUp, longsUp, shortsUp);
             const sig = COT_SIGNALS.find(s => s.key === sigKey);
 
-            const norm = Math.abs(deltaNet) / maxAbsDelta; // 0..1
+            const norm = Math.min(Math.abs(deltaNet) / maxAbsDelta, 1); // 0..1, clamped
 
             cotSignalEntries.push({
                 date: w.date,

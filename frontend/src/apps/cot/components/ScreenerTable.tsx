@@ -37,6 +37,7 @@ const V2_COLUMNS: Col[] = [
     { key: 'open_interest',   label: 'Open Interest', width: 110, align: 'right',  sortable: true,  type: 'number' },
     { key: 'oi_change',       label: 'OI Trend',      width: 100, align: 'right',  sortable: true,  type: 'oi_trend' },
     { key: 'flip_tag',        label: 'Signal',        width: 130, align: 'center', sortable: true,  type: 'flip', sortBy: 'flip_severity' },
+    { key: 'retail_heat_tag', label: 'Retail',        width: 140, align: 'center', sortable: true,  type: 'retail_heat', sortBy: 'retail_heat_severity' },
     { key: 'date',            label: 'Date',          width: 85,  align: 'center', sortable: true,  type: 'date' },
 ];
 
@@ -64,6 +65,14 @@ const FLIP_COLORS: Record<string, { bg: string; text: string }> = {
     'Extreme':                          { bg: 'rgba(251,146,60,0.14)', text: '#fb923c' },
     'Pre-Flip':                         { bg: 'rgba(59,130,246,0.14)', text: '#60a5fa' },
     'Neutral':                          { bg: 'transparent',            text: '#4b5563' },
+};
+
+const RETAIL_HEAT_COLORS: Record<string, { bg: string; text: string }> = {
+    '\uD83D\uDD25 Max Long':      { bg: 'rgba(239,68,68,0.20)',   text: '#f87171' },
+    '\u26A0\uFE0F Low Long':      { bg: 'rgba(251,146,60,0.18)',  text: '#fb923c' },
+    '\u2744\uFE0F Low Short':     { bg: 'rgba(59,130,246,0.14)',  text: '#60a5fa' },
+    '\uD83E\uDDCA Max Short':     { bg: 'rgba(20,184,166,0.16)',  text: '#2dd4bf' },
+    'Neutral':                     { bg: 'transparent',             text: '#4b5563' },
 };
 
 function getPercentileColor(p: number | null): string {
@@ -464,6 +473,30 @@ function renderCell(row: V2EnrichedRow, col: Col): React.ReactNode {
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                 >
                     {tag}
+                </span>
+            );
+        }
+
+        case 'retail_heat': {
+            const tag = (raw as string) || 'Neutral';
+            const retailRow = row as V2EnrichedRow;
+            const pct = retailRow.retail_percentile;
+            const colors = RETAIL_HEAT_COLORS[tag] || RETAIL_HEAT_COLORS.Neutral;
+            if (tag === 'Neutral' && pct == null) return <span className="text-[9px] text-muted/40">—</span>;
+            if (tag === 'Neutral') {
+                return (
+                    <span className="tabular-nums font-mono text-[10px] text-muted">
+                        {pct != null ? pct.toFixed(0) : '—'}
+                    </span>
+                );
+            }
+            return (
+                <span
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-wider whitespace-nowrap"
+                    style={{ backgroundColor: colors.bg, color: colors.text }}
+                >
+                    {tag}
+                    {pct != null && <span className="font-normal opacity-60">{pct.toFixed(0)}</span>}
                 </span>
             );
         }
